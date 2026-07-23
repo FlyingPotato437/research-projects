@@ -1,50 +1,63 @@
-# RadDose-AT: Predicting Radiation Dose from a Plant's Gene Activity
+# RadAlert-AT: Cross-Study Radiation-Exposure Triage
 
-A single, self-contained Jupyter notebook that walks through a complete small research
-project in space biology: predicting the absorbed radiation dose of an *Arabidopsis* plant
-from its gene-activity profile ("phytodosimetry"). It covers the raw data, the
-preprocessing that makes six independent experiments comparable, training and evaluating
-predictive models, a comparison of ten model families by how well they generalize to an
-unseen study, and an analysis of which genes carry the dose signal.
+This project asks whether an *Arabidopsis* RNA-seq profile can identify radiation exposure when the
+entire test study is unseen during training.
 
-The notebook is written to be readable without prior biology or machine-learning
-background, with each concept explained as it appears.
+The topic was redesigned from exact dose regression after auditing the experimental design. Of 158
+samples, 138 occur at either 0 or 100 Gy; only 20 represent intermediate doses. That distribution
+supports exposed-versus-control triage much better than a precise calibration curve.
 
-## Running it
+## Main result
 
-Everything the notebook needs is in this folder:
+Under six-fold leave-one-study-out evaluation, the stability ensemble obtains:
 
-- `RadDose_Full_Walkthrough.ipynb` — the notebook.
-- `raddose_data/` — the cleaned gene-activity matrix, the sample table, two raw studies
-  (used for the preprocessing figures), and the saved analysis results the notebook reads
-  (about 12 MB in total).
+- **84.2% pooled accuracy**
+- **82.4% balanced accuracy**
+- **0.883 pooled ROC-AUC**
+- **0.656 Matthews correlation coefficient**
+- **89.0% sensitivity**
+- **75.9% specificity**
 
-The notebook uses **relative paths**, so after cloning the repository you can open it from
-this folder and run all cells top to bottom. The model-comparison section trains ten
-models many times and takes roughly two minutes; everything else is fast.
+Gene selection is fitted independently inside each training fold. No held-out-study labels are used
+for feature selection, scaling, model fitting, or threshold choice.
 
-- **Local environment:** `pip install -r requirements.txt`, then launch Jupyter and run
-  the notebook from this folder.
-- The committed notebook already contains all rendered outputs, so it can be read as a
-  finished report on GitHub without running anything.
+## Start here
 
-## What it covers
+Open `RadDose_Full_Walkthrough.ipynb`. The fully executed notebook contains:
 
-1. Background: radiation, plants, gene activity, and what an absorbed dose (Gray) is.
-2. The data: 158 RNA-seq samples from six NASA OSDR *Arabidopsis* radiation studies.
-3. Preprocessing: log transform, per-study z-scoring, and gene selection, each shown on real data.
-4. The honest test: leave-one-study-out evaluation, and why it matters.
-5. Training and evaluating a ladder of models.
-6. Comparing ten model families by their generalization gap (which models transfer to a new study).
-7. A minimal causal gene panel that beats the classic 7-gene literature panel.
-8. Checking the signal against independent chemical-DNA-damage data.
-9. Conclusions and honest limitations.
+1. a target-design audit explaining the change from regression to exposure triage;
+2. the six-study data and preprocessing contract;
+3. leakage-safe leave-one-study-out evaluation;
+4. literature-panel, linear, kernel, and tree baselines;
+5. a 50/100-gene stability ensemble;
+6. accuracy, balanced accuracy, AUC, average precision, MCC, sensitivity, and specificity;
+7. pooled and per-study confusion/ROC analysis;
+8. performance at 0, 10, 40, 80, and 100 Gy;
+9. study-level bootstrap uncertainty;
+10. stable-gene and DNA-damage-response interpretation;
+11. exact dose regression retained as a transparent secondary negative result.
 
-## Data provenance
+## Run it
 
-The samples come from the NASA Open Science Data Repository (OSDR) radiation studies
-OSD-498, OSD-502, OSD-508, OSD-510, OSD-658, and OSD-782 (gamma rays and heavy ions,
-0–100 Gy). Expression values are GeneLab-normalized counts, harmonized per study. The
-files under `raddose_data/tables/` are saved outputs of the full analysis pipeline; the
-notebook recomputes the core benchmark live and loads these for the more expensive
-interpretation stages (the causal gene panel and the external-data validation).
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+jupyter notebook RadDose_Full_Walkthrough.ipynb
+```
+
+The notebook runs on CPU in roughly half a minute in the verified environment.
+
+## Included data
+
+`raddose_data/` contains the harmonized 158 × 4,002 expression matrix, sample manifest, two raw-study
+examples used for teaching figures, and saved biological-interpretation tables.
+
+Samples originate from NASA OSDR studies OSD-498, OSD-502, OSD-508, OSD-510, OSD-658, and OSD-782.
+
+## Claim boundary
+
+This is an exploratory plant-biology exposure classifier. It is not a human dosimeter, a deployed
+safety system, or evidence that the selected genes are specific to radiation rather than other
+stressors. With only six external studies, the most valuable next step is a frozen-model test on an
+independent seventh study containing multiple doses and non-radiation stress controls.
