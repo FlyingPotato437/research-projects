@@ -1,0 +1,17 @@
+# Verified with Python 3.10.14
+numpy==1.26.4
+pandas==2.2.2
+matplotlib==3.8.4
+scikit-learn==1.4.2
+xgboost==2.0.3
+lightgbm==4.3.0
+
+# Needed only for the live TabPFN cell in Section 6.
+# The notebook skips that cell automatically if these are absent or no GPU is present;
+# every other cell, including the full-study results in Section 7, still runs.
+tabpfn==2.0.3
+torch==2.9.0
+
+# To run the notebook itself
+notebook==7.6.0
+ipykernel==7.3.0

@@ -1,0 +1,4 @@
+# The raw Lending Club file is ~1.6 GB and licensed; it is downloaded, not redistributed.
+data/*.csv
+.ipynb_checkpoints/
+__pycache__/
