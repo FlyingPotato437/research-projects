@@ -112,10 +112,6 @@ def lstm_lodo(cur, feat, K=5, epochs=300):
     import torch, torch.nn as nn
     X,Xs,y,doms=build_sequences(cur,feat,K)
     if len(set(doms))<4: return None
-    # normalise
-    xm,xsd=X.reshape(-1,X.shape[-1]).mean(0),X.reshape(-1,X.shape[-1]).std(0)+1e-6
-    sm,ssd=Xs.mean(0),Xs.std(0)+1e-6
-    Xn=(X-xm)/xsd; Xsn=(Xs-sm)/ssd
     class Net(nn.Module):
         def __init__(s):
             super().__init__(); s.lstm=nn.LSTM(X.shape[-1],16,batch_first=True)
@@ -125,6 +121,13 @@ def lstm_lodo(cur, feat, K=5, epochs=300):
     pred=np.full(len(y),np.nan)
     for dom in set(doms):
         tr=doms!=dom; te=doms==dom
+        # Fit every normalization statistic on the training domains only. Computing these
+        # values globally would let the held-out domain influence its own evaluation.
+        xtr_flat=X[tr].reshape(-1,X.shape[-1])
+        xm,xsd=xtr_flat.mean(0),xtr_flat.std(0)+1e-6
+        sm,ssd=Xs[tr].mean(0),Xs[tr].std(0)+1e-6
+        Xn=(X-xm)/xsd; Xsn=(Xs-sm)/ssd
+        torch.manual_seed(0)
         net=Net(); opt=torch.optim.Adam(net.parameters(),lr=5e-3,weight_decay=1e-4); lossf=nn.MSELoss()
         seq=torch.tensor(Xn[tr]); st=torch.tensor(Xsn[tr]); tt=torch.tensor(y[tr])
         for _ in range(epochs):

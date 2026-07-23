@@ -1,0 +1,4 @@
+model,accuracy,ROC_AUC,F1
+LogReg,0.8383,0.907,0.8205
+RandomForest,0.8416,0.9099,0.8209
+MLP,0.7789,0.883,0.7452
